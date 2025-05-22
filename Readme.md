@@ -1,6 +1,6 @@
 # OData Client for PHP
 
-[![PHP Version Require](http://poser.pugx.org/schababerledigital/odata-client/require/php)](https://packagist.org/packages/schababerledigital/odata-client)
+[![PHP Version Require](http://poser.pugx.org/schababerledigital/odata-client/require/php)](https://packagist.org/packages/schababerle-digital/odata-client)
 
 **⚠️ Important note: This is an early alpha release! ⚠️**
 
