@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.2/phpunit.xsd" bootstrap="tests/bootstrap.php"
+         colors="true"
+         cacheDirectory=".phpunit.cache"
+         displayDetailsOnTestsThatTriggerWarnings="true">
+
+    <source>
+        <include>
+            <directory suffix=".php">./src</directory>
+        </include>
+    </source>
+
+    <testsuites>
+        <testsuite name="Unit">
+            <directory suffix="Test.php">./tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Integration">
+            <directory suffix="Test.php">./tests/Integration</directory>
+        </testsuite>
+    </testsuites>
+
+    <coverage>
+        <report>
+            <html outputDirectory="build/coverage/html" lowUpperBound="50" highLowerBound="90"/>
+            <text outputFile="build/coverage/coverage.txt" showUncoveredFiles="false" showOnlySummary="true"/>
+            <clover outputFile="build/logs/clover.xml"/>
+        </report>
+    </coverage>
+
+    <logging>
+        <junit outputFile="build/logs/junit.xml"/>
+    </logging>
+
+    <php>
+    </php>
+</phpunit>

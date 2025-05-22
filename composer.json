@@ -1,0 +1,38 @@
+{
+  "name": "schababerledigital/odata-client",
+  "description": "A PHP client library for OData services.",
+  "type": "library",
+  "license": "MIT",
+  "version": "0.1.0",
+  "authors": [
+    {
+      "name": "Patrick Schababerle",
+      "email": "patrick@schababerle.digital",
+      "homepage": "https://schababerle.digital"
+    }
+  ],
+  "require": {
+    "php": ">=8.0",
+    "guzzlehttp/guzzle": "^7.4",
+    "psr/http-client": "^1.0",
+    "psr/http-message": "^1.0 || ^2.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.5 || ^10.0 || ^11.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "SchababerleDigital\\OData\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "SchababerleDigital\\OData\\Tests\\": "tests/"
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true,
+  "config": {
+    "sort-packages": true
+  }
+}
