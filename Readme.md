@@ -3,6 +3,7 @@
 [![PHP Version Require](http://poser.pugx.org/schababerledigital/odata-client/require/php)](https://packagist.org/packages/schababerledigital/odata-client)
 
 **⚠️ Important note: This is an early alpha release! ⚠️**
+
 **This software is in an early development phase (alpha). The API may change without notice and there may be bugs or incomplete features. Use in production environments is currently not recommended**.
 
 A modern, easy-to-use PHP client library for interacting with OData services (version 2 and version 4 are supported). This library was developed with best practices in mind, including clear responsibilities, use of interfaces and PSR compatibility.
