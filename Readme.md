@@ -33,7 +33,7 @@ A modern, easy-to-use PHP client library for interacting with OData services (ve
 You can install the library via Composer:
 
 ```bash
-composer require schababerledigital/odata-client
+composer require schababerle-digital/odata-client
 ```
 
 ## Quick start / basic usage
