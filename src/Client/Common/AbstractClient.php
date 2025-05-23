@@ -80,7 +80,7 @@ abstract class AbstractClient implements ODataClientInterface
     /**
      * {@inheritDoc}
      */
-    public function find(string $entitySet, ?Closure $queryConfigurator = null): EntityCollectionInterface
+    public function find(string $entitySet, ?Closure $queryConfigurator = null, bool $followNextLink = false): EntityCollectionInterface
     {
         $queryBuilder = $this->createQueryBuilder($entitySet);
         if ($queryConfigurator !== null) {
@@ -90,10 +90,62 @@ abstract class AbstractClient implements ODataClientInterface
         $response = $this->executeRequest('GET', $url);
 
         try {
-            return $this->responseParser->parseCollection((string)$response->getBody(), $this->getResponseHeaders($response));
+            $collection = $this->responseParser->parseCollection((string)$response->getBody(), $this->getResponseHeaders($response));
+
+            // Wenn followNextLink aktiviert ist und ein nextLink existiert, diesen verfolgen
+            if ($followNextLink && $collection->getNextLink() !== null) {
+                return $this->followNextLink($collection);
+            }
+
+            return $collection;
         } catch (ParseException $e) {
             throw new ODataRequestException("Failed to parse collection from response: " . $e->getMessage(), 0, $e, ['url' => $url]);
         }
+    }
+
+    /**
+     * Folgt automatisch dem nextLink in einer EntityCollection und fügt die Ergebnisse zusammen.
+     *
+     * @param EntityCollectionInterface $collection Die ursprüngliche Ergebnismenge mit nextLink
+     * @return EntityCollectionInterface Die komplette Ergebnismenge mit allen folgenden Seiten
+     * @throws ODataRequestException Wenn ein Fehler beim Abruf der nächsten Seite auftritt
+     */
+    protected function followNextLink(EntityCollectionInterface $collection): EntityCollectionInterface
+    {
+        $currentCollection = $collection;
+
+        while ($nextLink = $currentCollection->getNextLink()) {
+            // Absolute URL im nextLink verwenden
+            $response = $this->executeRequest('GET', $nextLink);
+
+            try {
+                $nextCollection = $this->responseParser->parseCollection(
+                    (string)$response->getBody(),
+                    $this->getResponseHeaders($response)
+                );
+
+                // Entitäten zur Hauptsammlung hinzufügen
+                foreach ($nextCollection->all() as $entity) {
+                    $currentCollection->add($entity);
+                }
+
+                // nextLink für die nächste Iteration aktualisieren
+                $currentCollection->setNextLink($nextCollection->getNextLink());
+
+            } catch (ParseException $e) {
+                throw new ODataRequestException(
+                    "Failed to parse collection from nextLink response: " . $e->getMessage(),
+                    0,
+                    $e,
+                    ['url' => $nextLink]
+                );
+            }
+        }
+
+        // @odata.count-Wert aktualisieren, sodass er der tatsächlichen Anzahl der Elemente in der Sammlung entspricht
+        $currentCollection->setTotalCount(count($currentCollection));
+
+        return $currentCollection;
     }
 
     /**
@@ -476,3 +528,4 @@ abstract class AbstractClient implements ODataClientInterface
      */
     abstract public function executeBatch(array $requests): array;
 }
+
