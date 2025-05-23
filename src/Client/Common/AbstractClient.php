@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace SchababerleDigital\OData\Client\Common;
 
 use Closure;
+use JsonException;
 use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
 use SchababerleDigital\OData\Contract\EntityCollectionInterface;
 use SchababerleDigital\OData\Contract\EntityInterface;
@@ -60,40 +61,7 @@ abstract class AbstractClient implements ODataClientInterface
      */
     public function get(string $entitySet, string|int $id, ?Closure $queryConfigurator = null): EntityInterface
     {
-        // Check if it's a GUID - for Dynamics CRM we need to use a different approach
-        if (is_string($id) && preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id)) {
-            // For Dynamics CRM, we need to use the filter approach
-            $idFieldName = $this->getEntityIdFieldName($entitySet);
-
-            $results = $this->find($entitySet, function($qb) use ($idFieldName, $id, $queryConfigurator) {
-                // Apply filter with the ID
-                $qb->filter("{$idFieldName} eq {$id}");
-                $qb->top(1);
-
-                // Apply any additional query configurations
-                if ($queryConfigurator !== null) {
-                    $queryConfigurator($qb);
-                }
-            });
-
-            if (count($results) === 0) {
-                throw new EntityNotFoundException(
-                    "Entity not found in {$entitySet} with ID {$id}",
-                    $entitySet,
-                    $id
-                );
-            }
-
-            // Return the first (and should be only) result
-            foreach ($results as $entity) {
-                return $entity;
-            }
-
-            // This should never be reached
-            throw new ODataRequestException("Failed to retrieve entity after successful query");
-        }
-
-        // Standard OData approach for non-GUIDs
+        // Standard OData approach - works for all ID types including GUIDs
         $queryBuilder = $this->createQueryBuilder($entitySet);
         if ($queryConfigurator !== null) {
             $queryConfigurator($queryBuilder);
@@ -107,32 +75,6 @@ abstract class AbstractClient implements ODataClientInterface
         } catch (ParseException $e) {
             throw new ODataRequestException("Failed to parse entity from response: " . $e->getMessage(), 0, $e, ['url' => $url]);
         }
-    }
-
-    /**
-     * Get the entity ID field name for a given entity set.
-     * For Dynamics CRM, this is typically the singular form of the entity set name + 'id'
-     *
-     * @param string $entitySet The entity set name
-     * @return string The ID field name
-     */
-    protected function getEntityIdFieldName(string $entitySet): string
-    {
-        // Special cases mapping
-        $specialCases = [
-            'accounts' => 'accountid',
-            'contacts' => 'contactid',
-            'rs_devices' => 'rs_deviceid',
-            // Add more mappings as needed
-        ];
-
-        if (isset($specialCases[$entitySet])) {
-            return $specialCases[$entitySet];
-        }
-
-        // Default: remove trailing 's' if present and add 'id'
-        $singular = rtrim($entitySet, 's');
-        return $singular . 'id';
     }
 
     /**
@@ -388,9 +330,9 @@ abstract class AbstractClient implements ODataClientInterface
     protected function encodeKey(string|int $key): string|int
     {
         if (is_string($key)) {
-            // Check if this is a GUID (Dynamics CRM uses GUIDs with specific format)
+            // Check if this is a GUID (Dynamics CRM uses GUIDs without quotes)
             if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $key)) {
-                // GUIDs in Dynamics CRM werden ohne Anführungszeichen verwendet
+                // GUIDs in OData are used without quotes
                 return $key;
             }
 
@@ -534,4 +476,3 @@ abstract class AbstractClient implements ODataClientInterface
      */
     abstract public function executeBatch(array $requests): array;
 }
-
